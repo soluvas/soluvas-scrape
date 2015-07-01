@@ -1,0 +1,101 @@
+{
+  "@type": "ScrapeTemplate",
+  "id": "ppdb",
+  "protocol": "JSONRPC",
+  "protocolVersion": "2.0",
+  "uri": "http://api.ppdb.bandung.go.id/json",
+  "username": null,
+  "password": null,
+  "rpcMethod": "school.select",
+  "rpcParams": [
+    {
+      "id": "level",
+      "kind": "ENUMERATION",
+      "enumerationId": "SchoolLevel"
+    }
+  ],
+  "enumerations": [
+    {
+      "id": "SchoolLevel",
+      "options": [
+        {
+          "id": "elementary"
+        },
+        {
+          "id": "junior"
+        },
+        {
+          "id": "senior"
+        },
+        {
+          "id": "vocational"
+        }
+      ]
+    }
+  ],
+  "collections": [
+    {
+      "id": "school",
+      "name": "School",
+      "source": "ROOT",
+      "idProperty": "id",
+      "nameProperty": "name",
+      "properties": [
+        {
+          "id": "id",
+          "kind": "INTEGER"
+        },
+        {
+          "id": "code",
+          "kind": "INTEGER"
+        },
+        {
+          "id": "level",
+          "kind": "ENUMERATION",
+          "enumerationId": "SchoolLevel"
+        },
+        {
+          "id": "name",
+          "kind": "STRING"
+        },
+        {
+          "id": "address",
+          "kind": "STRING"
+        },
+        {
+          "id": "address_district",
+          "kind": "STRING"
+        },
+        {
+          "id": "address_subdistrict",
+          "kind": "STRING"
+        },
+        {
+          "id": "address_rw",
+          "kind": "INTEGER"
+        },
+        {
+          "id": "address_rt",
+          "kind": "INTEGER"
+        },
+        {
+          "id": "is_border",
+          "kind": "BOOLEAN"
+        },
+        {
+          "id": "foreigner_percentage",
+          "kind": "INTEGER"
+        },
+        {
+          "id": "option_i",
+          "kind": "INTEGER"
+        },
+        {
+          "id": "option",
+          "cardinality": "MULTIPLE",
+          "kind": "JSON_OBJECT"
+        }
+      ]
+    }
+  ]
+}

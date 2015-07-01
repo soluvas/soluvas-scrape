@@ -1,0 +1,133 @@
+{
+  "@type": "ScrapeTemplate",
+  "id": "registered_select",
+  "protocol": "JSONRPC",
+  "protocolVersion": "2.0",
+  "uri": "http://api.ppdb.bandung.go.id/json",
+  "username": null,
+  "password": null,
+  "rpcMethod": "registered.select",
+  "rpcParams": [
+    {
+      "id": "choice_id",
+      "kind": "INTEGER"
+    }
+  ],
+  "enumerations": [
+    {
+      "id": "SchoolLevel",
+      "options": [
+        {
+          "id": "elementary"
+        },
+        {
+          "id": "junior"
+        },
+        {
+          "id": "senior"
+        },
+        {
+          "id": "vocational"
+        }
+      ]
+    }
+  ],
+  "collections": [
+    {
+      "id": "applicant",
+      "name": "Applicant",
+      "source": "PATH",
+      "sourceExpression": "$.data",
+      "idProperty": "id",
+      "nameProperty": "name",
+      "properties": [
+        {
+          "id": "option_id",
+          "kind": "INTEGER",
+          "source": "REQUEST_PARAMETER",
+          "parameterId": "choice_id"
+        },
+        {
+          "id": "id",
+          "kind": "INTEGER"
+        },
+        {
+          "id": "registration_id",
+          "kind": "STRING"
+        },
+        {
+          "id": "no_un",
+          "kind": "STRING"
+        },
+        {
+          "id": "no_nik",
+          "kind": "STRING"
+        },
+        {
+          "id": "is_foreigner",
+          "kind": "BOOLEAN"
+        },
+        {
+          "id": "is_foreigner_detail",
+          "kind": "BOOLEAN"
+        },
+        {
+          "id": "is_insentif",
+          "kind": "BOOLEAN"
+        },
+        {
+          "id": "name",
+          "kind": "STRING"
+        },
+        {
+          "id": "old_school",
+          "kind": "STRING"
+        },
+        {
+          "id": "score_total1",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "score_total2",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "score_range1",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "score_range2",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "score_achievement",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "score_poor",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "score_kp4",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "score_age",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "status_choice",
+          "kind": "BOOLEAN"
+        },
+        {
+          "id": "tmp_status",
+          "kind": "ENUMERATION"
+        },
+        {
+          "id": "filtered_choice",
+          "kind": "JSON_OBJECT"
+        }
+      ]
+    }
+  ]
+}

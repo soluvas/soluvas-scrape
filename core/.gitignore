@@ -1,0 +1,11 @@
+.classpath
+.project
+.settings
+target
+.directory
+/build/
+/bin/
+.gradle
+/env.properties
+/application.properties
+/data

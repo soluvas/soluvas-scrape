@@ -1,0 +1,6 @@
+/application.properties
+*.AppManifest.xmi
+*.WebAddress.xmi
+gigastic.StarterSysConfig.xmi
+*.TwitterApp.jsonld
+*.TwitterAuthorization.jsonld

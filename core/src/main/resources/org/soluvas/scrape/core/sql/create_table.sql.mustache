@@ -1,0 +1,9 @@
+{{#tables}}
+CREATE TABLE {{{schemaName}}}.{{{tableName}}} (
+	id {{{idType}}} PRIMARY KEY,
+	name varchar(255)
+{{#columns}}
+	, {{{name}}} {{{type}}}
+{{/columns}}
+);
+{{/tables}}

@@ -1,0 +1,3 @@
+#!/bin/bash
+SCRIPT_DIR="$(dirname $0)"
+java -cp /usr/share/java/opencv.jar:$SCRIPT_DIR'/target/dependency/*:'$SCRIPT_DIR'/target/classes' com.gigastic.AdminApp "$@"
