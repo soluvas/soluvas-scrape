@@ -74,8 +74,10 @@ public class SummarizeTest {
             txMgr.afterPropertiesSet();
 
             // Please delete this data point, we already have 2015-07-02T04:00+07:00 generated manually for reference
+//            summarizer.summarize("ppdbbandung2015", "optionapplicantsnapshot", dataSource,
+//                    txMgr, new DateTime("2015-07-02T05:00+07:00"));
             summarizer.summarize("ppdbbandung2015", "optionapplicantsnapshot", dataSource,
-                    txMgr, new DateTime("2015-07-02T05:00+07:00"));
+                    txMgr, new DateTime());
         } finally {
             dataSource.close();
         }
