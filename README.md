@@ -1,4 +1,5 @@
-# soluvas-scrape
+# Soluvas Scrape
+
 Declarative web site scraping library/framework in Java. Uses Jaunt.
 
 ## Underlying Library
@@ -65,12 +66,33 @@ Declarative web site scraping library/framework in Java. Uses Jaunt.
 
 ## Supported Protocols/Input Formats
 
-1. **JSON-RPC over HTTP(S)** (TODO).
+1. **JSON-RPC over HTTP(S)**.
 2. **HTML over HTTP(S)** (TODO).
 3. **Twitter API** (TODO).
 4. **Foursquare API** (TODO).
 5. **Facebook API** (TODO).
+6. **Atom/RSS Feed** (TODO).
+
+## Database Storage
+
+1. **Integrated User/Organization Workspace**. All workspace tables are stored inside the app database, inside the tenant's schema,
+    with appropriate prefixes for namespacing (i.e. `p_` for person and `o_` for organization).
+    The schema of all workspace tables are fully managed by app, and is considered responsibility of the app.
+    Currently stored in PostgreSQL for storage efficiency and speed of indexing/aggregate reports,
+    but maybe MongoDB or Cassandra can be good too.
 
 ## Sample Data
 
 For Hendy, sample data is at: `~/Dropbox/Hendy_Projects/soluvas-scrape/sample/ppdb`
+
+## Related Projects
+
+* [**Soluvas Analytics**](https://github.com/soluvas/soluvas-analytics). After getting those data,
+    present them in a pleasing and engaging way.
+* [**Soluvas ETL**](https://github.com/soluvas/soluvas-etl). Integrate incoming scraped data with other systems,
+    post or sync with social media.
+* [**Soluvas AI**](https://github.com/soluvas/soluvas-ai). Add some intelligence to fill missing information
+    or to predict new ones.
+* [**Soluvas Buzz**](https://github.com/soluvas/soluvas-buzz). Run social media, email, and online marketing campaigns
+    with scraped data.
+* **Soluvas Publisher** will be superseded by Soluvas Scrape + Soluvas ETL/Soluvas Buzz.

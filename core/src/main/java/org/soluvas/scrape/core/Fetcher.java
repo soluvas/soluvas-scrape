@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -81,6 +82,7 @@ public class Fetcher {
 
         final Retryer<JsonRpc2MethodResult> retryer = RetryerBuilder.<JsonRpc2MethodResult>newBuilder()
                 .retryIfExceptionOfType(HttpStatusNotOkException.class)
+                .retryIfExceptionOfType(SocketException.class)
                 .withStopStrategy(StopStrategies.stopAfterAttempt(3))
                 .withWaitStrategy(WaitStrategies.fixedWait(15, TimeUnit.SECONDS))
                 .build();

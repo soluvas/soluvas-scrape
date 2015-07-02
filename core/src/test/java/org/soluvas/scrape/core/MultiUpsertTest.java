@@ -3,6 +3,8 @@ package org.soluvas.scrape.core;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.junit.Before;
 import org.junit.Test;
@@ -175,14 +177,26 @@ public class MultiUpsertTest {
             txMgr.afterPropertiesSet();
 
             final NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-            final List<String> registrationIds = new TransactionTemplate(txMgr).execute(tx -> {
-                final List<String> tmpRegistrationIds = jdbcTemplate.queryForList("SELECT registration_id FROM ppdbbandung2015.applicant",
-                        ImmutableMap.of(), String.class);
-                log.info("Registration IDs: {}", tmpRegistrationIds);
+            final Set<String> registrationIds = new TransactionTemplate(txMgr).execute(tx -> {
+                final Set<String> tmpRegistrationIds = ImmutableSet.copyOf(jdbcTemplate.queryForList(
+                        "SELECT id FROM ppdbbandung2015.applicant",
+                        ImmutableMap.of(), String.class));
+                log.info("{} Applicant Registration IDs: {}", tmpRegistrationIds.size(), tmpRegistrationIds);
                 return tmpRegistrationIds;
             });
+            final Set<String> existingStudentRegistrationIds = new TransactionTemplate(txMgr).execute(tx -> {
+                final Set<String> tmpStudentRegistrationIds = ImmutableSet.copyOf(jdbcTemplate.queryForList(
+                        "SELECT registration_id FROM ppdbbandung2015.student",
+                        ImmutableMap.of(), String.class));
+                log.info("{} Existing students: {}", tmpStudentRegistrationIds.size(), tmpStudentRegistrationIds);
+                return tmpStudentRegistrationIds;
+            });
+            final Sets.SetView<String> missingRegistrationIds = Sets.difference(registrationIds, existingStudentRegistrationIds);
+            log.info("{} missing out of {} registration IDs ({} existing students): {}",
+                    missingRegistrationIds.size(), registrationIds.size(), existingStudentRegistrationIds.size(),
+                    missingRegistrationIds);
 
-            for (String registrationId : registrationIds) {
+            for (final String registrationId : missingRegistrationIds) {
                 final FetchData result = fetcher.fetch(studentGet,
                         ImmutableMap.of("registration_id", registrationId));
                 final ScrapeData scrapeData = scraper.scrape(studentGet, result);

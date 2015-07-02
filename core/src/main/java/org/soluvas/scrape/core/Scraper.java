@@ -120,7 +120,12 @@ public class Scraper {
                                         break;
                                     case LOCAL_DATE:
                                         try {
-                                            propData.getValues().add(new PropertyValue(new LocalDate(entityObj.get(propDef.getId()).asText())));
+                                            final LocalDate localDate = new LocalDate(entityObj.get(propDef.getId()).asText());
+                                            if (localDate.getYear() != 0) {
+                                                propData.getValues().add(new PropertyValue(localDate));
+                                            } else {
+                                                log.warn("Ignoring problematic date: " + localDate);
+                                            }
                                         } catch (IllegalFieldValueException e) {
                                             // Sometimes we have "0000-00-00" :(
                                             log.error("Cannot set LOCAL_DATE property", e);

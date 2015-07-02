@@ -59,6 +59,7 @@ CREATE TABLE ppdbbandung2015.optionapplicantsnapshot (
     registeredq1scoretotal1 double precision,
     registeredq2scoretotal1 double precision,
     registeredq3scoretotal1 double precision,
+    registeredmaxscoretotal1 double precision,
     registeredmeanscoretotal1 double precision,
     registeredstddevscoretotal1 double precision,
     registeredlowscoretotal1 double precision,
@@ -68,6 +69,7 @@ CREATE TABLE ppdbbandung2015.optionapplicantsnapshot (
     registeredforeignerq1scoretotal1 double precision,
     registeredforeignerq2scoretotal1 double precision,
     registeredforeignerq3scoretotal1 double precision,
+    registeredforeignermaxscoretotal1 double precision,
     registeredforeignermeanscoretotal1 double precision,
     registeredforeignerstddevscoretotal1 double precision,
     registeredforeignerlowscoretotal1 double precision,
@@ -77,6 +79,7 @@ CREATE TABLE ppdbbandung2015.optionapplicantsnapshot (
     registeredforeignerdetailq1scoretotal1 double precision,
     registeredforeignerdetailq2scoretotal1 double precision,
     registeredforeignerdetailq3scoretotal1 double precision,
+    registeredforeignerdetailmaxscoretotal1 double precision,
     registeredforeignerdetailmeanscoretotal1 double precision,
     registeredforeignerdetailstddevscoretotal1 double precision,
     registeredforeignerdetaillowscoretotal1 double precision,
@@ -86,6 +89,7 @@ CREATE TABLE ppdbbandung2015.optionapplicantsnapshot (
     registeredinsiderq1scoretotal1 double precision,
     registeredinsiderq2scoretotal1 double precision,
     registeredinsiderq3scoretotal1 double precision,
+    registeredinsidermaxscoretotal1 double precision,
     registeredinsidermeanscoretotal1 double precision,
     registeredinsiderstddevscoretotal1 double precision,
     registeredinsiderlowscoretotal1 double precision,
@@ -103,6 +107,7 @@ CREATE TABLE ppdbbandung2015.optionapplicantsnapshot (
     filteredq1scoretotal1 double precision,
     filteredq2scoretotal1 double precision,
     filteredq3scoretotal1 double precision,
+    filteredmaxscoretotal1 double precision,
     filteredmeanscoretotal1 double precision,
     filteredstddevscoretotal1 double precision,
     filteredlowscoretotal1 double precision,
@@ -112,6 +117,7 @@ CREATE TABLE ppdbbandung2015.optionapplicantsnapshot (
     filteredforeignerq1scoretotal1 double precision,
     filteredforeignerq2scoretotal1 double precision,
     filteredforeignerq3scoretotal1 double precision,
+    filteredforeignermaxscoretotal1 double precision,
     filteredforeignermeanscoretotal1 double precision,
     filteredforeignerstddevscoretotal1 double precision,
     filteredforeignerlowscoretotal1 double precision,
@@ -121,6 +127,7 @@ CREATE TABLE ppdbbandung2015.optionapplicantsnapshot (
     filteredforeignerdetailq1scoretotal1 double precision,
     filteredforeignerdetailq2scoretotal1 double precision,
     filteredforeignerdetailq3scoretotal1 double precision,
+    filteredforeignerdetailmaxscoretotal1 double precision,
     filteredforeignerdetailmeanscoretotal1 double precision,
     filteredforeignerdetailstddevscoretotal1 double precision,
     filteredforeignerdetaillowscoretotal1 double precision,
@@ -130,6 +137,7 @@ CREATE TABLE ppdbbandung2015.optionapplicantsnapshot (
     filteredinsiderq1scoretotal1 double precision,
     filteredinsiderq2scoretotal1 double precision,
     filteredinsiderq3scoretotal1 double precision,
+    filteredinsidermaxscoretotal1 double precision,
     filteredinsidermeanscoretotal1 double precision,
     filteredinsiderstddevscoretotal1 double precision,
     filteredinsiderlowscoretotal1 double precision,
@@ -207,6 +215,7 @@ SET
     registeredq1scoretotal1=tmp.registeredq1scoretotal1,
     registeredq2scoretotal1=tmp.registeredq2scoretotal1,
     registeredq3scoretotal1=tmp.registeredq3scoretotal1,
+    registeredmaxscoretotal1=tmp.registeredmaxscoretotal1,
     registeredmeanscoretotal1=tmp.registeredmeanscoretotal1,
     registeredstddevscoretotal1=tmp.registeredstddevscoretotal1,
     registeredlowscoretotal1 = tmp.registeredmeanscoretotal1 - tmp.registeredstddevscoretotal1,
@@ -216,6 +225,7 @@ SET
     registeredforeignerq1scoretotal1=tmp.registeredforeignerq1scoretotal1,
     registeredforeignerq2scoretotal1=tmp.registeredforeignerq2scoretotal1,
     registeredforeignerq3scoretotal1=tmp.registeredforeignerq3scoretotal1,
+    registeredforeignermaxscoretotal1=tmp.registeredforeignermaxscoretotal1,
     registeredforeignermeanscoretotal1=tmp.registeredforeignermeanscoretotal1,
     registeredforeignerstddevscoretotal1=tmp.registeredforeignerstddevscoretotal1,
     registeredforeignerlowscoretotal1 = tmp.registeredforeignermeanscoretotal1 - tmp.registeredstddevscoretotal1,
@@ -225,6 +235,7 @@ SET
     registeredforeignerdetailq1scoretotal1=tmp.registeredforeignerdetailq1scoretotal1,
     registeredforeignerdetailq2scoretotal1=tmp.registeredforeignerdetailq2scoretotal1,
     registeredforeignerdetailq3scoretotal1=tmp.registeredforeignerdetailq3scoretotal1,
+    registeredforeignerdetailmaxscoretotal1=tmp.registeredforeignerdetailmaxscoretotal1,
     registeredforeignerdetailmeanscoretotal1=tmp.registeredforeignerdetailmeanscoretotal1,
     registeredforeignerdetailstddevscoretotal1=tmp.registeredforeignerdetailstddevscoretotal1,
     registeredforeignerdetaillowscoretotal1 = tmp.registeredforeignerdetailmeanscoretotal1 - tmp.registeredstddevscoretotal1,
@@ -234,6 +245,7 @@ SET
     registeredinsiderq1scoretotal1=tmp.registeredinsiderq1scoretotal1,
     registeredinsiderq2scoretotal1=tmp.registeredinsiderq2scoretotal1,
     registeredinsiderq3scoretotal1=tmp.registeredinsiderq3scoretotal1,
+    registeredinsidermaxscoretotal1=tmp.registeredinsidermaxscoretotal1,
     registeredinsidermeanscoretotal1=tmp.registeredinsidermeanscoretotal1,
     registeredinsiderstddevscoretotal1=tmp.registeredinsiderstddevscoretotal1,
     registeredinsiderlowscoretotal1 = tmp.registeredinsidermeanscoretotal1 - tmp.registeredstddevscoretotal1,
@@ -316,6 +328,7 @@ SET
     filteredq1scoretotal1=tmp.filteredq1scoretotal1,
     filteredq2scoretotal1=tmp.filteredq2scoretotal1,
     filteredq3scoretotal1=tmp.filteredq3scoretotal1,
+    filteredmaxscoretotal1=tmp.filteredmaxscoretotal1,
     filteredmeanscoretotal1=tmp.filteredmeanscoretotal1,
     filteredstddevscoretotal1=tmp.filteredstddevscoretotal1,
     filteredlowscoretotal1 = tmp.filteredmeanscoretotal1 - tmp.filteredstddevscoretotal1,
@@ -325,6 +338,7 @@ SET
     filteredforeignerq1scoretotal1=tmp.filteredforeignerq1scoretotal1,
     filteredforeignerq2scoretotal1=tmp.filteredforeignerq2scoretotal1,
     filteredforeignerq3scoretotal1=tmp.filteredforeignerq3scoretotal1,
+    filteredforeignermaxscoretotal1=tmp.filteredforeignermaxscoretotal1,
     filteredforeignermeanscoretotal1=tmp.filteredforeignermeanscoretotal1,
     filteredforeignerstddevscoretotal1=tmp.filteredforeignerstddevscoretotal1,
     filteredforeignerlowscoretotal1 = tmp.filteredforeignermeanscoretotal1 - tmp.filteredstddevscoretotal1,
@@ -334,6 +348,7 @@ SET
     filteredforeignerdetailq1scoretotal1=tmp.filteredforeignerdetailq1scoretotal1,
     filteredforeignerdetailq2scoretotal1=tmp.filteredforeignerdetailq2scoretotal1,
     filteredforeignerdetailq3scoretotal1=tmp.filteredforeignerdetailq3scoretotal1,
+    filteredforeignerdetailmaxscoretotal1=tmp.filteredforeignerdetailmaxscoretotal1,
     filteredforeignerdetailmeanscoretotal1=tmp.filteredforeignerdetailmeanscoretotal1,
     filteredforeignerdetailstddevscoretotal1=tmp.filteredforeignerdetailstddevscoretotal1,
     filteredforeignerdetaillowscoretotal1 = tmp.filteredforeignerdetailmeanscoretotal1 - tmp.filteredstddevscoretotal1,
@@ -343,6 +358,7 @@ SET
     filteredinsiderq1scoretotal1=tmp.filteredinsiderq1scoretotal1,
     filteredinsiderq2scoretotal1=tmp.filteredinsiderq2scoretotal1,
     filteredinsiderq3scoretotal1=tmp.filteredinsiderq3scoretotal1,
+    filteredinsidermaxscoretotal1=tmp.filteredinsidermaxscoretotal1,
     filteredinsidermeanscoretotal1=tmp.filteredinsidermeanscoretotal1,
     filteredinsiderstddevscoretotal1=tmp.filteredinsiderstddevscoretotal1,
     filteredinsiderlowscoretotal1 = tmp.filteredinsidermeanscoretotal1 - tmp.filteredstddevscoretotal1,
@@ -461,6 +477,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "    registeredq1scoretotal1=tmp.registeredq1scoretotal1,\n" +
                 "    registeredq2scoretotal1=tmp.registeredq2scoretotal1,\n" +
                 "    registeredq3scoretotal1=tmp.registeredq3scoretotal1,\n" +
+                "    registeredmaxscoretotal1=tmp.registeredmaxscoretotal1,\n" +
                 "    registeredmeanscoretotal1=tmp.registeredmeanscoretotal1,\n" +
                 "    registeredstddevscoretotal1=tmp.registeredstddevscoretotal1,\n" +
                 "    registeredlowscoretotal1 = tmp.registeredmeanscoretotal1 - tmp.registeredstddevscoretotal1,\n" +
@@ -470,6 +487,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "    registeredforeignerq1scoretotal1=tmp.registeredforeignerq1scoretotal1,\n" +
                 "    registeredforeignerq2scoretotal1=tmp.registeredforeignerq2scoretotal1,\n" +
                 "    registeredforeignerq3scoretotal1=tmp.registeredforeignerq3scoretotal1,\n" +
+                "    registeredforeignermaxscoretotal1=tmp.registeredforeignermaxscoretotal1,\n" +
                 "    registeredforeignermeanscoretotal1=tmp.registeredforeignermeanscoretotal1,\n" +
                 "    registeredforeignerstddevscoretotal1=tmp.registeredforeignerstddevscoretotal1,\n" +
                 "    registeredforeignerlowscoretotal1 = tmp.registeredforeignermeanscoretotal1 - tmp.registeredstddevscoretotal1,\n" +
@@ -479,6 +497,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "    registeredforeignerdetailq1scoretotal1=tmp.registeredforeignerdetailq1scoretotal1,\n" +
                 "    registeredforeignerdetailq2scoretotal1=tmp.registeredforeignerdetailq2scoretotal1,\n" +
                 "    registeredforeignerdetailq3scoretotal1=tmp.registeredforeignerdetailq3scoretotal1,\n" +
+                "    registeredforeignerdetailmaxscoretotal1=tmp.registeredforeignerdetailmaxscoretotal1,\n" +
                 "    registeredforeignerdetailmeanscoretotal1=tmp.registeredforeignerdetailmeanscoretotal1,\n" +
                 "    registeredforeignerdetailstddevscoretotal1=tmp.registeredforeignerdetailstddevscoretotal1,\n" +
                 "    registeredforeignerdetaillowscoretotal1 = tmp.registeredforeignerdetailmeanscoretotal1 - tmp.registeredstddevscoretotal1,\n" +
@@ -488,6 +507,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "    registeredinsiderq1scoretotal1=tmp.registeredinsiderq1scoretotal1,\n" +
                 "    registeredinsiderq2scoretotal1=tmp.registeredinsiderq2scoretotal1,\n" +
                 "    registeredinsiderq3scoretotal1=tmp.registeredinsiderq3scoretotal1,\n" +
+                "    registeredinsidermaxscoretotal1=tmp.registeredinsidermaxscoretotal1,\n" +
                 "    registeredinsidermeanscoretotal1=tmp.registeredinsidermeanscoretotal1,\n" +
                 "    registeredinsiderstddevscoretotal1=tmp.registeredinsiderstddevscoretotal1,\n" +
                 "    registeredinsiderlowscoretotal1 = tmp.registeredinsidermeanscoretotal1 - tmp.registeredstddevscoretotal1,\n" +
@@ -581,6 +601,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "    filteredq1scoretotal1=tmp.filteredq1scoretotal1,\n" +
                 "    filteredq2scoretotal1=tmp.filteredq2scoretotal1,\n" +
                 "    filteredq3scoretotal1=tmp.filteredq3scoretotal1,\n" +
+                "    filteredmaxscoretotal1=tmp.filteredmaxscoretotal1,\n" +
                 "    filteredmeanscoretotal1=tmp.filteredmeanscoretotal1,\n" +
                 "    filteredstddevscoretotal1=tmp.filteredstddevscoretotal1,\n" +
                 "    filteredlowscoretotal1 = tmp.filteredmeanscoretotal1 - tmp.filteredstddevscoretotal1,\n" +
@@ -590,6 +611,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "    filteredforeignerq1scoretotal1=tmp.filteredforeignerq1scoretotal1,\n" +
                 "    filteredforeignerq2scoretotal1=tmp.filteredforeignerq2scoretotal1,\n" +
                 "    filteredforeignerq3scoretotal1=tmp.filteredforeignerq3scoretotal1,\n" +
+                "    filteredforeignermaxscoretotal1=tmp.filteredforeignermaxscoretotal1,\n" +
                 "    filteredforeignermeanscoretotal1=tmp.filteredforeignermeanscoretotal1,\n" +
                 "    filteredforeignerstddevscoretotal1=tmp.filteredforeignerstddevscoretotal1,\n" +
                 "    filteredforeignerlowscoretotal1 = tmp.filteredforeignermeanscoretotal1 - tmp.filteredstddevscoretotal1,\n" +
@@ -599,6 +621,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "    filteredforeignerdetailq1scoretotal1=tmp.filteredforeignerdetailq1scoretotal1,\n" +
                 "    filteredforeignerdetailq2scoretotal1=tmp.filteredforeignerdetailq2scoretotal1,\n" +
                 "    filteredforeignerdetailq3scoretotal1=tmp.filteredforeignerdetailq3scoretotal1,\n" +
+                "    filteredforeignerdetailmaxscoretotal1=tmp.filteredforeignerdetailmaxscoretotal1,\n" +
                 "    filteredforeignerdetailmeanscoretotal1=tmp.filteredforeignerdetailmeanscoretotal1,\n" +
                 "    filteredforeignerdetailstddevscoretotal1=tmp.filteredforeignerdetailstddevscoretotal1,\n" +
                 "    filteredforeignerdetaillowscoretotal1 = tmp.filteredforeignerdetailmeanscoretotal1 - tmp.filteredstddevscoretotal1,\n" +
@@ -608,6 +631,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "    filteredinsiderq1scoretotal1=tmp.filteredinsiderq1scoretotal1,\n" +
                 "    filteredinsiderq2scoretotal1=tmp.filteredinsiderq2scoretotal1,\n" +
                 "    filteredinsiderq3scoretotal1=tmp.filteredinsiderq3scoretotal1,\n" +
+                "    filteredinsidermaxscoretotal1=tmp.filteredinsidermaxscoretotal1,\n" +
                 "    filteredinsidermeanscoretotal1=tmp.filteredinsidermeanscoretotal1,\n" +
                 "    filteredinsiderstddevscoretotal1=tmp.filteredinsiderstddevscoretotal1,\n" +
                 "    filteredinsiderlowscoretotal1 = tmp.filteredinsidermeanscoretotal1 - tmp.filteredstddevscoretotal1,\n" +
