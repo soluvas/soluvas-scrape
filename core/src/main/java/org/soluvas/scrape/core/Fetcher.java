@@ -2,6 +2,7 @@ package org.soluvas.scrape.core;
 
 import org.apache.camel.Body;
 import org.apache.camel.Handler;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.client.cache.HttpCacheContext;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -77,13 +79,19 @@ public class Fetcher {
         try (CloseableHttpResponse resp = httpClient.execute(postReq, context)) {
             log.info("Received {} {} {} bytes", context.getCacheResponseStatus(),
                     resp.getEntity().getContentType(), resp.getEntity().getContentLength());
-            final JsonRpc2MethodResult methodResult = JsonUtils.mapper.readValue(resp.getEntity().getContent(), JsonRpc2MethodResult.class);
-            log.info("JSON-RPC Method result: {}", methodResult);
-            fetchData.setJsonRpcResult(methodResult);
-            if (methodResult.getError() != null) {
-                throw new ScrapeException(methodResult.getError(), "Error fetching %s: %s", uri, methodResult.getError());
+            final String entityBody = IOUtils.toString(resp.getEntity().getContent(), StandardCharsets.UTF_8);
+            try {
+                final JsonRpc2MethodResult methodResult = JsonUtils.mapper.readValue(entityBody, JsonRpc2MethodResult.class);
+                log.info("JSON-RPC Method result: {}", methodResult);
+                fetchData.setJsonRpcResult(methodResult);
+                if (methodResult.getError() != null) {
+                    throw new ScrapeException(methodResult.getError(), "Error fetching %s: %s", uri, methodResult.getError());
+                }
+                return fetchData;
+            } catch (Exception e) {
+                log.error("Error converting to JSON: " + entityBody, e);
+                throw new ScrapeException("Error converting to JSON (see previous log)", e);
             }
-            return fetchData;
         }
     }
 

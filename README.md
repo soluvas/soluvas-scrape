@@ -35,12 +35,8 @@ Declarative web site scraping library/framework in Java. Uses Jaunt.
     [Spark/Hadoop integration](https://apacheignite.readme.io/v1.2/docs/overview).
 
 2. **Historical/Time Series Data support** (TODO). So you can track, e.g. estimated passing grade for several schools over time.
-    Two possible approaches: materialized (write-first) and embedded (calculate-on-query).
+    Three possible approaches: materialized (write-first), embedded (calculate-on-query), and materialized+some embedded.
     With materialized, during data collection, it also writes time series data in different tables.
-    With embedded, historical data is saved in the same table as the original data (which the original data schema
-    needs to be modified), then they're processed during reporting/query time.
-    We'll be using materialized as it is more scalable and can implemented in any database, e.g. PostgreSQL, MongoDB,
-    Cassandra, HBase, even file-based formats like Parquet.
     
     However:
     
@@ -48,6 +44,13 @@ Declarative web site scraping library/framework in Java. Uses Jaunt.
       but over time this should happen less.
     * if you need to define a new time series data, this can only apply to future data points, not past data points.
 
+    With embedded, historical data is saved in the same table as the original data (which the original data schema
+    needs to be modified), then they're processed during reporting/query time.
+    We'll be using materialized+some embedded as it is more scalable and can implemented in any database, e.g. PostgreSQL, MongoDB,
+    Cassandra, HBase, even file-based formats like Parquet.
+    By "some embedded", we also store a list of essential foreign key in the materialized table, 
+    like `registration_id` for each `option_id`+`snapshottime` so we can refer to this later on.
+    
 3. **Generate JPA Entity class from ScrapeTemplate** (TODO).
 4. **Generate Liquibase from ScrapeTemplate** (TODO).
 5. **Generate R ggplot2 charts and histograms** (TODO).
@@ -56,6 +59,9 @@ Declarative web site scraping library/framework in Java. Uses Jaunt.
 8. **Generate interactive Tableau visualization definition** (TODO).
 9. **Save raw requests & server responses to JSON or HTML files, with request metadata** (TODO).
 10. **Save raw requests & server responses to Postman Catalog** (TODO).
+11. **Snapshot important lists for historical/time series information.**
+    For example, save `registration_id[]` (array) keyed by `option_id` and `snapshottime`.
+    While main purpose of each 
 
 ## Supported Protocols/Input Formats
 

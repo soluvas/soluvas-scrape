@@ -72,7 +72,7 @@ public class ScraperTest {
     @Test
     public void scrapeRegistered() {
         final FetchData result = fetcher.fetch(registeredSelect,
-                ImmutableMap.of("choice_id", 615));
+                ImmutableMap.of("choice_id", 726));
         final ScrapeData scrapeData = scraper.scrape(registeredSelect, result);
         log.info("Scrape data: {}", scrapeData);
         Assert.assertThat(scrapeData.getCollections(), Matchers.hasSize(1));
