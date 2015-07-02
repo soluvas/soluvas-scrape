@@ -89,6 +89,10 @@ public class TableDmlGenerator {
                         return it.getId() + "=ARRAY[ :" + it.getId() + " ]::json[]";
                     } else if (it.getKind() == PropertyKind.JSON_OBJECT) {
                         return it.getId() + "=:" + it.getId() + "::json";
+                    } else if (it.getKind() == PropertyKind.DATE_TIME) {
+                        return it.getId() + "=:" + it.getId() + "::timestamp with time zone";
+                    } else if (it.getKind() == PropertyKind.LOCAL_DATE) {
+                        return it.getId() + "=:" + it.getId() + "::date";
                     } else if (it.getCardinality() == Cardinality.MULTIPLE) {
                         return it.getId() + "=ARRAY[ :" + it.getId() + " ]";
                     } else {
@@ -103,6 +107,10 @@ public class TableDmlGenerator {
                         return "ARRAY[ :" + it.getId() + " ]::json[]";
                     } else if (it.getKind() == PropertyKind.JSON_OBJECT) {
                         return ":" + it.getId() + "::json";
+                    } else if (it.getKind() == PropertyKind.DATE_TIME) {
+                        return ":" + it.getId() + "::timestamp with time zone";
+                    } else if (it.getKind() == PropertyKind.LOCAL_DATE) {
+                        return ":" + it.getId() + "::date";
                     } else if (it.getCardinality() == Cardinality.MULTIPLE) {
                         return "ARRAY[ :" + it.getId() + " ]";
                     } else {
@@ -127,7 +135,7 @@ public class TableDmlGenerator {
         new TransactionTemplate(txMgr).execute(tx -> {
             for (final CollectionData collData : scrapeData.getCollections()) {
                 final UpsertSql upsertSql = generateUpsert(schemaName, template, collData.getDefinition().getId());
-                log.info("Upsert for {}: {}", collData.getDefinition().getId(), upsertSql);
+                log.trace("Upsert for {}: {}", collData.getDefinition().getId(), upsertSql);
                 for (final EntityData entity : collData.getEntities()) {
                     final LinkedHashMap<String, Object> params = new LinkedHashMap<>();
                     params.put("id", entity.getId());
@@ -137,15 +145,17 @@ public class TableDmlGenerator {
                                 .map(value -> value.getValue() instanceof JsonNode ? value.getJsonObject().toString() : value.getValue());
                         if (prop.getDefinition().getCardinality() == Cardinality.MULTIPLE) {
                             params.put(prop.getDefinition().getId(), sqlValueStream.collect(Collectors.toList()));
+                        } else if (prop.getDefinition().getKind() == PropertyKind.LOCAL_DATE || prop.getDefinition().getKind() == PropertyKind.DATE_TIME) {
+                            params.put(prop.getDefinition().getId(), sqlValueStream.map(Object::toString).findFirst().orElse(null));
                         } else {
                             params.put(prop.getDefinition().getId(), sqlValueStream.findFirst().orElse(null));
                         }
                     });
                     log.debug("Upserting {} {} ({})...", collData.getDefinition().getId(), entity.getId(), entity.getName());
-                    jdbcTemplate.update(upsertSql.updateSql, params);
-                    jdbcTemplate.update(upsertSql.insertSql, params);
+                        jdbcTemplate.update(upsertSql.updateSql, params);
+                        jdbcTemplate.update(upsertSql.insertSql, params);
+                    }
                 }
-            }
             return null;
         });
     }

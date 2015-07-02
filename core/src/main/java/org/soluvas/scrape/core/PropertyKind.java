@@ -16,6 +16,8 @@ public enum PropertyKind {
     TEXT,
     BOOLEAN,
     DOUBLE,
+    LOCAL_DATE,
+    DATE_TIME,
     /**
      * Arbitrary {@link com.fasterxml.jackson.databind.node.ObjectNode}.
      */

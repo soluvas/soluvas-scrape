@@ -1,12 +1,12 @@
 {
   "@type": "ScrapeTemplate",
-  "id": "registered_select",
+  "id": "filtered_select",
   "protocol": "JSONRPC",
   "protocolVersion": "2.0",
   "uri": "http://api.ppdb.bandung.go.id/json",
   "username": null,
   "password": null,
-  "rpcMethod": "registered.select",
+  "rpcMethod": "filtered.select",
   "rpcParams": [
     {
       "id": "choice_id",
@@ -34,8 +34,8 @@
   ],
   "collections": [
     {
-      "id": "applicant",
-      "name": "Applicant",
+      "id": "filteredapplicant",
+      "name": "Filtered Applicant",
       "source": "PATH",
       "sourceExpression": "$.data",
       "idProperty": "registration_id",

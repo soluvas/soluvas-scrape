@@ -1,5 +1,7 @@
 package org.soluvas.scrape.core;
 
+import org.apache.camel.Body;
+import org.apache.camel.Handler;
 import org.apache.http.client.cache.HttpCacheContext;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -31,6 +33,7 @@ public class Fetcher {
     @Inject
     private CloseableHttpClient httpClient;
 
+    @Handler
     public FetchData fetch(ScrapeTemplate template,
                       Map<String, Object> actualParams) {
         LowerEnumSerializer.LOWER = false;
@@ -38,6 +41,9 @@ public class Fetcher {
         log.info("Scraping {} {} {} ...", template.getProtocol(), template.getProtocolVersion(),
                 template.getUri());
         try {
+            // FIXME: Use Retryer (with limit) when: Caused by: java.net.SocketException: Connection reset
+            // at java.net.SocketInputStream.read(SocketInputStream.java:209)
+
             switch (template.getProtocol()) {
                 case JSONRPC:
                     return fetchJsonRpc(uri, template, actualParams);

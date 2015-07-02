@@ -12,6 +12,7 @@ public class PropertyDef implements Serializable {
     private Cardinality cardinality;
     private PropertySource source;
     private String parameterId;
+    private String formatPattern;
 
     public String getId() {
         return id;
@@ -64,5 +65,17 @@ public class PropertyDef implements Serializable {
 
     public void setParameterId(String parameterId) {
         this.parameterId = parameterId;
+    }
+
+    /**
+     * For {@link PropertyKind#DATE_TIME}, it uses {@link org.joda.time.format.DateTimeFormat}.
+     * @return
+     */
+    public String getFormatPattern() {
+        return formatPattern;
+    }
+
+    public void setFormatPattern(String formatPattern) {
+        this.formatPattern = formatPattern;
     }
 }

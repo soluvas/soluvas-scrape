@@ -35,6 +35,8 @@ public class TableDdlGeneratorTest {
     private TableDdlGenerator tableDdlGenerator;
     private ScrapeTemplate schoolSelect;
     private ScrapeTemplate registeredSelect;
+    private ScrapeTemplate studentGet;
+    private ScrapeTemplate filteredSelect;
 
     @Configuration
     @ComponentScan(basePackageClasses = Fetcher.class)
@@ -46,8 +48,11 @@ public class TableDdlGeneratorTest {
                 "sample/ppdb/school_select.ScrapeTemplate.jsonld"
         ));
         registeredSelect = scrapeTemplateRepo.add(new File(
-                "sample/ppdb/registered_select.ScrapeTemplate.jsonld"
-        ));
+                "sample/ppdb/registered_select.ScrapeTemplate.jsonld"));
+        filteredSelect = scrapeTemplateRepo.add(new File(
+                "sample/ppdb/filtered_select.ScrapeTemplate.jsonld"));
+        studentGet = scrapeTemplateRepo.add(new File(
+                "sample/ppdb/student_get.ScrapeTemplate.jsonld"));
     }
 
     @Test
@@ -59,6 +64,18 @@ public class TableDdlGeneratorTest {
     @Test
     public void generateCreateTable_registeredSelect() throws IOException {
         final String sql = tableDdlGenerator.generateCreateTable("ppdbbandung2015", registeredSelect);
+        log.info("SQL: {}", sql);
+    }
+
+    @Test
+    public void generateCreateTable_filteredSelect() throws IOException {
+        final String sql = tableDdlGenerator.generateCreateTable("ppdbbandung2015", filteredSelect);
+        log.info("SQL: {}", sql);
+    }
+
+    @Test
+    public void generateCreateTable_studentGet() throws IOException {
+        final String sql = tableDdlGenerator.generateCreateTable("ppdbbandung2015", studentGet);
         log.info("SQL: {}", sql);
     }
 

@@ -65,6 +65,10 @@ public class TableDdlGenerator {
                 return "varchar(255)" + cardinalityStr;
             case TEXT:
                 return "text" + cardinalityStr;
+            case LOCAL_DATE:
+                return "date" + cardinalityStr;
+            case DATE_TIME:
+                return "timestamp with time zone" + cardinalityStr;
             default:
                 throw new IllegalArgumentException("Unsupported kind: " + kind);
         }

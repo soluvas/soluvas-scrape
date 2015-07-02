@@ -64,3 +64,7 @@ Declarative web site scraping library/framework in Java. Uses Jaunt.
 3. **Twitter API** (TODO).
 4. **Foursquare API** (TODO).
 5. **Facebook API** (TODO).
+
+## Sample Data
+
+For Hendy, sample data is at: `~/Dropbox/Hendy_Projects/soluvas-scrape/sample/ppdb`

@@ -9,5 +9,5 @@
     <logger name="org.springframework.web.servlet.mvc.method.annotation" level="DEBUG"/>
     <logger name="org.springframework.security" level="INFO"/>
     <logger name="org.scribe" level="DEBUG"/>
-    <logger name="org.apache.http.impl" level="DEBUG"/>
+    <!--<logger name="org.apache.http.impl" level="DEBUG"/>-->
 </configuration>

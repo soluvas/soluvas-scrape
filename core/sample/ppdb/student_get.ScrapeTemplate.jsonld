@@ -1,16 +1,16 @@
 {
   "@type": "ScrapeTemplate",
-  "id": "registered_select",
+  "id": "student_get",
   "protocol": "JSONRPC",
   "protocolVersion": "2.0",
   "uri": "http://api.ppdb.bandung.go.id/json",
   "username": null,
   "password": null,
-  "rpcMethod": "registered.select",
+  "rpcMethod": "student.get",
   "rpcParams": [
     {
-      "id": "choice_id",
-      "kind": "INTEGER"
+      "id": "registration_id",
+      "kind": "STRING"
     }
   ],
   "enumerations": [
@@ -34,18 +34,15 @@
   ],
   "collections": [
     {
-      "id": "applicant",
-      "name": "Applicant",
-      "source": "PATH",
-      "sourceExpression": "$.data",
-      "idProperty": "registration_id",
+      "id": "student",
+      "name": "Student",
+      "source": "ROOT",
+      "idProperty": "id",
       "nameProperty": "name",
       "properties": [
         {
-          "id": "option_id",
-          "kind": "INTEGER",
-          "source": "REQUEST_PARAMETER",
-          "parameterId": "choice_id"
+          "id": "id",
+          "kind": "INTEGER"
         },
         {
           "id": "registration_id",
@@ -58,6 +55,10 @@
         {
           "id": "no_nik",
           "kind": "STRING"
+        },
+        {
+          "id": "graduation_year",
+          "kind": "INTEGER"
         },
         {
           "id": "is_foreigner",
@@ -76,8 +77,53 @@
           "kind": "STRING"
         },
         {
+          "id": "gender",
+          "kind": "ENUMERATION",
+          "enumerationId": "Gender"
+        },
+        {
+          "id": "birth_place",
+          "kind": "STRING"
+        },
+        {
+          "id": "birth_date",
+          "kind": "LOCAL_DATE"
+        },
+        {
+          "id": "address_district",
+          "kind": "STRING"
+        },
+        {
+          "id": "address_subdistrict",
+          "kind": "STRING"
+        },
+        {
+          "id": "address_rw",
+          "kind": "INTEGER"
+        },
+        {
+          "id": "address_rt",
+          "kind": "INTEGER"
+        },
+        {
           "id": "old_school",
           "kind": "STRING"
+        },
+        {
+          "id": "score_bahasa",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "score_english",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "score_math",
+          "kind": "DOUBLE"
+        },
+        {
+          "id": "score_physics",
+          "kind": "DOUBLE"
         },
         {
           "id": "score_total1",
@@ -96,12 +142,24 @@
           "kind": "DOUBLE"
         },
         {
+          "id": "achievement_json",
+          "kind": "TEXT"
+        },
+        {
           "id": "score_achievement",
           "kind": "DOUBLE"
         },
         {
+          "id": "poor_json",
+          "kind": "TEXT"
+        },
+        {
           "id": "score_poor",
           "kind": "DOUBLE"
+        },
+        {
+          "id": "kp4_json",
+          "kind": "TEXT"
         },
         {
           "id": "score_kp4",
@@ -112,6 +170,18 @@
           "kind": "DOUBLE"
         },
         {
+          "id": "first_choice",
+          "kind": "JSON_OBJECT"
+        },
+        {
+          "id": "second_choice",
+          "kind": "JSON_OBJECT"
+        },
+        {
+          "id": "filtered_choice",
+          "kind": "JSON_OBJECT"
+        },
+        {
           "id": "status_choice",
           "kind": "BOOLEAN"
         },
@@ -120,8 +190,9 @@
           "kind": "ENUMERATION"
         },
         {
-          "id": "filtered_choice",
-          "kind": "JSON_OBJECT"
+          "id": "post_time",
+          "kind": "DATE_TIME",
+          "formatPattern": "yyyy-MM-dd HH:mm:ss"
         }
       ]
     }

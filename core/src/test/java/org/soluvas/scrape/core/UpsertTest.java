@@ -44,6 +44,8 @@ public class UpsertTest {
     private TableDmlGenerator tableDmlGenerator;
     private ScrapeTemplate schoolSelect;
     private ScrapeTemplate registeredSelect;
+    private ScrapeTemplate studentGet;
+    private ScrapeTemplate filteredSelect;
 
     @Configuration
     @ComponentScan(basePackageClasses = Fetcher.class)
@@ -53,11 +55,13 @@ public class UpsertTest {
     @Before
     public void setUp() {
         schoolSelect = scrapeTemplateRepo.add(new File(
-                "sample/ppdb/school_select.ScrapeTemplate.jsonld"
-        ));
+                "sample/ppdb/school_select.ScrapeTemplate.jsonld"));
         registeredSelect = scrapeTemplateRepo.add(new File(
-                "sample/ppdb/registered_select.ScrapeTemplate.jsonld"
-        ));
+                "sample/ppdb/registered_select.ScrapeTemplate.jsonld"));
+        filteredSelect = scrapeTemplateRepo.add(new File(
+                "sample/ppdb/filtered_select.ScrapeTemplate.jsonld"));
+        studentGet = scrapeTemplateRepo.add(new File(
+                "sample/ppdb/student_get.ScrapeTemplate.jsonld"));
     }
 
     @Test
@@ -100,6 +104,52 @@ public class UpsertTest {
             txMgr.afterPropertiesSet();
 
             tableDmlGenerator.upsert("ppdbbandung2015", registeredSelect,
+                    scrapeData, dataSource, txMgr);
+        } finally {
+            dataSource.close();
+        }
+    }
+
+    @Test
+    public void upsertFiltered() throws IOException, PropertyVetoException {
+        final FetchData result = fetcher.fetch(filteredSelect,
+                ImmutableMap.of("choice_id", 615));
+        final ScrapeData scrapeData = scraper.scrape(filteredSelect, result);
+
+        final ComboPooledDataSource dataSource = new ComboPooledDataSource();
+        try {
+            dataSource.setDriverClass(Driver.class.getName());
+            dataSource.setJdbcUrl("jdbc:postgresql://localhost/scrape_scrape_dev");
+            dataSource.setUser("postgres");
+            dataSource.setPassword("bippo");
+
+            final DataSourceTransactionManager txMgr = new DataSourceTransactionManager(dataSource);
+            txMgr.afterPropertiesSet();
+
+            tableDmlGenerator.upsert("ppdbbandung2015", filteredSelect,
+                    scrapeData, dataSource, txMgr);
+        } finally {
+            dataSource.close();
+        }
+    }
+
+    @Test
+    public void upsertStudent() throws IOException, PropertyVetoException {
+        final FetchData result = fetcher.fetch(studentGet,
+                ImmutableMap.of("registration_id", "3004-1009afirmasi"));
+        final ScrapeData scrapeData = scraper.scrape(studentGet, result);
+
+        final ComboPooledDataSource dataSource = new ComboPooledDataSource();
+        try {
+            dataSource.setDriverClass(Driver.class.getName());
+            dataSource.setJdbcUrl("jdbc:postgresql://localhost/scrape_scrape_dev");
+            dataSource.setUser("postgres");
+            dataSource.setPassword("bippo");
+
+            final DataSourceTransactionManager txMgr = new DataSourceTransactionManager(dataSource);
+            txMgr.afterPropertiesSet();
+
+            tableDmlGenerator.upsert("ppdbbandung2015", studentGet,
                     scrapeData, dataSource, txMgr);
         } finally {
             dataSource.close();
