@@ -136,4 +136,17 @@ public class MultiSummarizeTest {
         }
     }
 
+    @Test
+    public void periodicMultiScrapeThenSummarizeFromSchoolOptions() throws IOException, PropertyVetoException, InterruptedException {
+        while (true) {
+            try {
+                multiScrapeThenSummarizeFromSchoolOptions();
+            } catch (Exception e) {
+                log.error("Error but still go on", e);
+            }
+            log.info("Waiting 15 minutes...");
+            Thread.sleep(15 * 60 * 1000);
+        }
+    }
+
 }
