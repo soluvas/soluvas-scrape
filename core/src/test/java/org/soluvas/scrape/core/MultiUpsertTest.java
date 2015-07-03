@@ -197,11 +197,16 @@ public class MultiUpsertTest {
                     missingRegistrationIds);
 
             for (final String registrationId : missingRegistrationIds) {
-                final FetchData result = fetcher.fetch(studentGet,
-                        ImmutableMap.of("registration_id", registrationId));
-                final ScrapeData scrapeData = scraper.scrape(studentGet, result);
-                tableDmlGenerator.upsert("ppdbbandung2015", studentGet,
-                        scrapeData, dataSource, txMgr);
+                try {
+                    final FetchData result = fetcher.fetch(studentGet,
+                            ImmutableMap.of("registration_id", registrationId));
+                    final ScrapeData scrapeData = scraper.scrape(studentGet, result);
+                    tableDmlGenerator.upsert("ppdbbandung2015", studentGet,
+                            scrapeData, dataSource, txMgr);
+                } catch (Exception e) {
+                    // Some people cannot be found which is OK
+                    log.error("Error scraping student " + registrationId, e);
+                }
             }
         } finally {
             dataSource.close();
