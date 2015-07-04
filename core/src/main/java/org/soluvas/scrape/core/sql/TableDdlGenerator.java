@@ -95,6 +95,7 @@ public class TableDdlGenerator {
         });
 
         final DefaultMustacheFactory mustacheFactory = new DefaultMustacheFactory("org/soluvas/scrape/core/sql");
+        // TODO: TableDdlGenerator should generate CREATE INDEXes #5
         final Mustache mustache = mustacheFactory.compile("create_table.sql.mustache");
         try (StringWriter sw = new StringWriter()) {
             mustache.execute(sw, createTableData);

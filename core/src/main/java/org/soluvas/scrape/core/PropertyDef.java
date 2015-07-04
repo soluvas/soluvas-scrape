@@ -13,6 +13,7 @@ public class PropertyDef implements Serializable {
     private PropertySource source;
     private String parameterId;
     private String formatPattern;
+    private Boolean indexed;
 
     public String getId() {
         return id;
@@ -77,5 +78,13 @@ public class PropertyDef implements Serializable {
 
     public void setFormatPattern(String formatPattern) {
         this.formatPattern = formatPattern;
+    }
+
+    public Boolean getIndexed() {
+        return indexed;
+    }
+
+    public void setIndexed(Boolean indexed) {
+        this.indexed = indexed;
     }
 }

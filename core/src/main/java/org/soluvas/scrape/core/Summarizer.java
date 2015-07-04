@@ -97,6 +97,9 @@ CREATE TABLE ppdbbandung2015.optionapplicantsnapshot (
 
     registeredregistrationids varchar(255)[],
     registeredscoretotal1s double precision[],
+    registeredforeignerscoretotal1s double precision[],
+    registeredforeignerdetailscoretotal1s double precision[],
+    registeredinsiderscoretotal1s double precision[],
 
     filteredcount int,
     filteredforeignercount int,
@@ -145,6 +148,9 @@ CREATE TABLE ppdbbandung2015.optionapplicantsnapshot (
 
     filteredregistrationids varchar(255)[],
     filteredscoretotal1s double precision[],
+    filteredforeignerscoretotal1s double precision[],
+    filteredforeignerdetailscoretotal1s double precision[],
+    filteredinsiderscoretotal1s double precision[],
     PRIMARY KEY (snapshottime, option_id)
 );
 CREATE INDEX ik_optionapplicantsnapshot_snapshottime ON ppdbbandung2015.optionapplicantsnapshot (snapshottime);
@@ -175,27 +181,72 @@ ORDER BY option_id;
 
 WITH ranks AS (
 	SELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,
-	  is_foreigner rank_is_foreigner,
-	  (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) rank_is_foreigner_detail,
-	  is_insentif rank_is_insentif,
 	  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,
 	  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile
 	FROM ppdbbandung2015.applicant
+), ranks_lk AS (
+	SELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,
+	  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,
+	  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile
+	FROM ppdbbandung2015.applicant WHERE is_foreigner = true
+), ranks_lw AS (
+	SELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,
+	  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,
+	  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile
+	FROM ppdbbandung2015.applicant WHERE is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new)
+), ranks_dw AS (
+	SELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,
+	  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,
+	  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile
+	FROM ppdbbandung2015.applicant WHERE is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new)
 )
-SELECT option_id, '2015-07-02T04:00+07:00'::timestamp with time zone snapshottime,
+
+SELECT '2015-07-02T04:00+07:00'::timestamp with time zone snapshottime, option_id,
   COUNT(*) registeredcount,
   SUM(CASE WHEN is_foreigner=true THEN 1 ELSE 0 END) registeredforeignercount,
-  SUM(CASE WHEN is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) THEN 1 ELSE 0 END) registeredforeignerdetailcount,
-  SUM(CASE WHEN is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new) THEN 1 ELSE 0 END) registeredinsidercount,
+
+  -- WARNING: count for registered is different than filtered!
+  SUM(CASE WHEN is_foreigner=false AND (is_insentif=false OR is_foreigner_detail>0) THEN 1 ELSE 0 END) registeredforeignerdetailcount,
+  SUM(CASE WHEN is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=0) THEN 1 ELSE 0 END) registeredinsidercount,
+
   SUM(CASE WHEN is_insentif=true THEN 1 ELSE 0 END) registeredinsentifcount,
   MIN(score_total1) registeredminscoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=1) registeredq1scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=2) registeredq2scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=3) registeredq3scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=1) registeredq1scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=2) registeredq2scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=3) registeredq3scoretotal1,
   MAX(score_total1) registeredmaxscoretotal1,
   AVG(score_total1) registeredmeanscoretotal1,
+  stddev_samp(score_total1) registeredstddevscoretotal1,
+
+  (SELECT MIN(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) registeredforeignerminscoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=1) registeredforeignerq1scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=2) registeredforeignerq2scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=3) registeredforeignerq3scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) registeredforeignermaxscoretotal1,
+  (SELECT AVG(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) registeredforeignermeanscoretotal1,
+  (SELECT stddev_samp(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) registeredforeignerstddevscoretotal1,
+
+  (SELECT MIN(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) registeredforeignerdetailminscoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=1) registeredforeignerdetailq1scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=2) registeredforeignerdetailq2scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=3) registeredforeignerdetailq3scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) registeredforeignerdetailmaxscoretotal1,
+  (SELECT AVG(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) registeredforeignerdetailmeanscoretotal1,
+  (SELECT stddev_samp(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) registeredforeignerdetailstddevscoretotal1,
+
+  (SELECT MIN(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) registeredinsiderminscoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=1) registeredinsiderq1scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=2) registeredinsiderq2scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=3) registeredinsiderq3scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) registeredinsidermaxscoretotal1,
+  (SELECT AVG(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) registeredinsidermeanscoretotal1,
+  (SELECT stddev_samp(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) registeredinsiderstddevscoretotal1,
+
   array_agg(id) registeredregistrationids,
-  array_agg(score_total1) registeredscoretotal1s
+  array_agg(score_total1) registeredscoretotal1s,
+  array(SELECT rank_total1 FROM ranks_lk WHERE rank_option_id=option_id) registeredforeignerscoretotal1s,
+  array(SELECT rank_total1 FROM ranks_lw WHERE rank_option_id=option_id) registeredforeignerdetailscoretotal1s,
+  array(SELECT rank_total1 FROM ranks_dw WHERE rank_option_id=option_id) registeredinsiderscoretotal1s
 FROM ppdbbandung2015.applicant
   JOIN ranks ON rank_id = id
 GROUP BY option_id
@@ -210,7 +261,7 @@ SET
     registeredforeignerdetailcount=tmp.registeredforeignerdetailcount,
     registeredinsidercount=tmp.registeredinsidercount,
     registeredinsentifcount=tmp.registeredinsentifcount,
-    
+
     registeredminscoretotal1=tmp.registeredminscoretotal1,
     registeredq1scoretotal1=tmp.registeredq1scoretotal1,
     registeredq2scoretotal1=tmp.registeredq2scoretotal1,
@@ -262,53 +313,72 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
 
 WITH ranks AS (
 	SELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,
-	  is_foreigner rank_is_foreigner,
-	  (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) rank_is_foreigner_detail,
-	  is_insentif rank_is_insentif,
 	  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,
 	  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile
 	FROM ppdbbandung2015.filteredapplicant
+), ranks_lk AS (
+	SELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,
+	  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,
+	  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile
+	FROM ppdbbandung2015.filteredapplicant WHERE is_foreigner = true
+), ranks_lw AS (
+	SELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,
+	  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,
+	  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile
+	FROM ppdbbandung2015.filteredapplicant WHERE is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new)
+), ranks_dw AS (
+	SELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,
+	  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,
+	  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile
+	FROM ppdbbandung2015.filteredapplicant WHERE is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new)
 )
+
 SELECT '2015-07-02T04:00+07:00'::timestamp with time zone snapshottime, option_id,
   COUNT(*) filteredcount,
   SUM(CASE WHEN is_foreigner=true THEN 1 ELSE 0 END) filteredforeignercount,
+
+  -- WARNING: count for registered is different than filtered!
   SUM(CASE WHEN is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) THEN 1 ELSE 0 END) filteredforeignerdetailcount,
   SUM(CASE WHEN is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new) THEN 1 ELSE 0 END) filteredinsidercount,
+
   SUM(CASE WHEN is_insentif=true THEN 1 ELSE 0 END) filteredinsentifcount,
   MIN(score_total1) filteredminscoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=1) filteredq1scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=2) filteredq2scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=3) filteredq3scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=1) filteredq1scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=2) filteredq2scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=3) filteredq3scoretotal1,
   MAX(score_total1) filteredmaxscoretotal1,
   AVG(score_total1) filteredmeanscoretotal1,
   stddev_samp(score_total1) filteredstddevscoretotal1,
-  
-  (SELECT MIN(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) filteredforeignerminscoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true AND ranks.qtile=1) filteredforeignerq1scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true AND ranks.qtile=2) filteredforeignerq2scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true AND ranks.qtile=3) filteredforeignerq3scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) filteredforeignermaxscoretotal1,
-  (SELECT AVG(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) filteredforeignermeanscoretotal1,
-  (SELECT stddev_samp(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) filteredforeignerstddevscoretotal1,
-  
-  (SELECT MIN(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) filteredforeignerdetailminscoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true AND ranks.qtile=1) filteredforeignerdetailq1scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true AND ranks.qtile=2) filteredforeignerdetailq2scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true AND ranks.qtile=3) filteredforeignerdetailq3scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) filteredforeignerdetailmaxscoretotal1,
-  (SELECT AVG(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) filteredforeignerdetailmeanscoretotal1,
-  (SELECT stddev_samp(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) filteredforeignerdetailstddevscoretotal1,
-  
-  (SELECT MIN(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) filteredinsiderminscoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false AND ranks.qtile=1) filteredinsiderq1scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false AND ranks.qtile=2) filteredinsiderq2scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false AND ranks.qtile=3) filteredinsiderq3scoretotal1,
-  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) filteredinsidermaxscoretotal1,
-  (SELECT AVG(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) filteredinsidermeanscoretotal1,
-  (SELECT stddev_samp(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) filteredinsiderstddevscoretotal1,
-  
+
+  (SELECT MIN(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) filteredforeignerminscoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=1) filteredforeignerq1scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=2) filteredforeignerq2scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=3) filteredforeignerq3scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) filteredforeignermaxscoretotal1,
+  (SELECT AVG(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) filteredforeignermeanscoretotal1,
+  (SELECT stddev_samp(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) filteredforeignerstddevscoretotal1,
+
+  (SELECT MIN(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) filteredforeignerdetailminscoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=1) filteredforeignerdetailq1scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=2) filteredforeignerdetailq2scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=3) filteredforeignerdetailq3scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) filteredforeignerdetailmaxscoretotal1,
+  (SELECT AVG(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) filteredforeignerdetailmeanscoretotal1,
+  (SELECT stddev_samp(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) filteredforeignerdetailstddevscoretotal1,
+
+  (SELECT MIN(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) filteredinsiderminscoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=1) filteredinsiderq1scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=2) filteredinsiderq2scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=3) filteredinsiderq3scoretotal1,
+  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) filteredinsidermaxscoretotal1,
+  (SELECT AVG(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) filteredinsidermeanscoretotal1,
+  (SELECT stddev_samp(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) filteredinsiderstddevscoretotal1,
+
   array_agg(id) filteredregistrationids,
-  array_agg(score_total1) filteredscoretotal1s
+  array_agg(score_total1) filteredscoretotal1s,
+  array(SELECT rank_total1 FROM ranks_lk WHERE rank_option_id=option_id) filteredforeignerscoretotal1s,
+  array(SELECT rank_total1 FROM ranks_lw WHERE rank_option_id=option_id) filteredforeignerdetailscoretotal1s,
+  array(SELECT rank_total1 FROM ranks_dw WHERE rank_option_id=option_id) filteredinsiderscoretotal1s
 FROM ppdbbandung2015.filteredapplicant
   JOIN ranks ON rank_id = id
 GROUP BY option_id
@@ -323,7 +393,7 @@ SET
     filteredforeignerdetailcount=tmp.filteredforeignerdetailcount,
     filteredinsidercount=tmp.filteredinsidercount,
     filteredinsentifcount=tmp.filteredinsentifcount,
-    
+
     filteredminscoretotal1=tmp.filteredminscoretotal1,
     filteredq1scoretotal1=tmp.filteredq1scoretotal1,
     filteredq2scoretotal1=tmp.filteredq2scoretotal1,
@@ -390,7 +460,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
         log.info("Inserting placeholder for {}", snapshotTime);
         jdbcTemplate.update(sql, ImmutableMap.of("snapshotTime", snapshotTime.toString()));
     }
-    
+
     /**
      * Step 2: TODO: Grab option+school info
      * MUST be executed inside Transaction
@@ -400,7 +470,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                                        TransactionStatus tx,
                                        DateTime snapshotTime) {
     }
-    
+
     /**
      * Step 3: You grab data for the registered applicant. To be used for UPDATE FROM later.
      * MUST be executed inside Transaction
@@ -410,61 +480,80 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                                          NamedParameterJdbcTemplate jdbcTemplate,
                                          TransactionStatus tx,
                                          DateTime snapshotTime) {
-        final String subSql = "WITH ranks AS (\n" +
-                "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
-                "\t  is_foreigner rank_is_foreigner,\n" +
-                "\t  (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) rank_is_foreigner_detail,\n" +
-                "\t  is_insentif rank_is_insentif,\n" +
-                "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
-                "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
-                "\tFROM " + schemaName + "." + applicantTable +"\n" +
-                ")\n" +
-                "SELECT :snapshotTime::timestamp with time zone snapshottime, option_id,\n" +
-                "  COUNT(*) registeredcount,\n" +
-                "  SUM(CASE WHEN is_foreigner=true THEN 1 ELSE 0 END) registeredforeignercount,\n" +
-                "  SUM(CASE WHEN is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) THEN 1 ELSE 0 END) registeredforeignerdetailcount,\n" +
-                "  SUM(CASE WHEN is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new) THEN 1 ELSE 0 END) registeredinsidercount,\n" +
-                "  SUM(CASE WHEN is_insentif=true THEN 1 ELSE 0 END) registeredinsentifcount,\n" +
-                "  \n" +
-                "  MIN(score_total1) registeredminscoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=1) registeredq1scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=2) registeredq2scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=3) registeredq3scoretotal1,\n" +
-                "  MAX(score_total1) registeredmaxscoretotal1,\n" +
-                "  AVG(score_total1) registeredmeanscoretotal1,\n" +
-                "  stddev_samp(score_total1) registeredstddevscoretotal1,\n" +
-                "  \n" +
-                "  (SELECT MIN(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) registeredforeignerminscoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true AND ranks.qtile=1) registeredforeignerq1scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true AND ranks.qtile=2) registeredforeignerq2scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true AND ranks.qtile=3) registeredforeignerq3scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) registeredforeignermaxscoretotal1,\n" +
-                "  (SELECT AVG(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) registeredforeignermeanscoretotal1,\n" +
-                "  (SELECT stddev_samp(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) registeredforeignerstddevscoretotal1,\n" +
-                "  \n" +
-                "  (SELECT MIN(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) registeredforeignerdetailminscoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true AND ranks.qtile=1) registeredforeignerdetailq1scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true AND ranks.qtile=2) registeredforeignerdetailq2scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true AND ranks.qtile=3) registeredforeignerdetailq3scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) registeredforeignerdetailmaxscoretotal1,\n" +
-                "  (SELECT AVG(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) registeredforeignerdetailmeanscoretotal1,\n" +
-                "  (SELECT stddev_samp(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) registeredforeignerdetailstddevscoretotal1,\n" +
-                "  \n" +
-                "  (SELECT MIN(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) registeredinsiderminscoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false AND ranks.qtile=1) registeredinsiderq1scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false AND ranks.qtile=2) registeredinsiderq2scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false AND ranks.qtile=3) registeredinsiderq3scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) registeredinsidermaxscoretotal1,\n" +
-                "  (SELECT AVG(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) registeredinsidermeanscoretotal1,\n" +
-                "  (SELECT stddev_samp(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) registeredinsiderstddevscoretotal1,\n" +
-                "  \n" +
-                "  array_agg(id) registeredregistrationids,\n" +
-                "  array_agg(score_total1) registeredscoretotal1s\n" +
-                "FROM "+ schemaName + "."+ applicantTable + "\n" +
-                "  JOIN ranks ON rank_id = id\n" +
-                "GROUP BY option_id\n" +
-                "ORDER BY option_id";
-        
+        final String subSql =
+                "WITH ranks AS (\n" +
+                        "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
+                        "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
+                        "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
+                        "\tFROM " + schemaName + "." + applicantTable +"\n" +
+                        "), ranks_lk AS (\n" +
+                        "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
+                        "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
+                        "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
+                        "\tFROM " + schemaName + "." + applicantTable +" WHERE is_foreigner = true\n" +
+                        "), ranks_lw AS (\n" +
+                        "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
+                        "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
+                        "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
+                        "\tFROM " + schemaName + "." + applicantTable +" WHERE is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new)\n" +
+                        "), ranks_dw AS (\n" +
+                        "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
+                        "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
+                        "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
+                        "\tFROM " + schemaName + "." + applicantTable +" WHERE is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new)\n" +
+                        ")\n" +
+                        "SELECT :snapshotTime::timestamp with time zone snapshottime, option_id,\n" +
+                        "  COUNT(*) registeredcount,\n" +
+                        "  SUM(CASE WHEN is_foreigner=true THEN 1 ELSE 0 END) registeredforeignercount,\n" +
+
+                        "  -- WARNING: count for registered is different than filtered!\n" +
+                        "  SUM(CASE WHEN is_foreigner=false AND (is_insentif=false OR is_foreigner_detail>0) THEN 1 ELSE 0 END) registeredforeignerdetailcount,\n" +
+                        "  SUM(CASE WHEN is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=0) THEN 1 ELSE 0 END) registeredinsidercount,\n" +
+
+                        "  SUM(CASE WHEN is_insentif=true THEN 1 ELSE 0 END) registeredinsentifcount,\n" +
+                        "  \n" +
+                        "  MIN(score_total1) registeredminscoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=1) registeredq1scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=2) registeredq2scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=3) registeredq3scoretotal1,\n" +
+                        "  MAX(score_total1) registeredmaxscoretotal1,\n" +
+                        "  AVG(score_total1) registeredmeanscoretotal1,\n" +
+                        "  stddev_samp(score_total1) registeredstddevscoretotal1,\n" +
+                        "\n" +
+                        "  (SELECT MIN(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) registeredforeignerminscoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=1) registeredforeignerq1scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=2) registeredforeignerq2scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=3) registeredforeignerq3scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) registeredforeignermaxscoretotal1,\n" +
+                        "  (SELECT AVG(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) registeredforeignermeanscoretotal1,\n" +
+                        "  (SELECT stddev_samp(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) registeredforeignerstddevscoretotal1,\n" +
+                        "\n" +
+                        "  (SELECT MIN(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) registeredforeignerdetailminscoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=1) registeredforeignerdetailq1scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=2) registeredforeignerdetailq2scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=3) registeredforeignerdetailq3scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) registeredforeignerdetailmaxscoretotal1,\n" +
+                        "  (SELECT AVG(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) registeredforeignerdetailmeanscoretotal1,\n" +
+                        "  (SELECT stddev_samp(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) registeredforeignerdetailstddevscoretotal1,\n" +
+                        "\n" +
+                        "  (SELECT MIN(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) registeredinsiderminscoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=1) registeredinsiderq1scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=2) registeredinsiderq2scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=3) registeredinsiderq3scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) registeredinsidermaxscoretotal1,\n" +
+                        "  (SELECT AVG(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) registeredinsidermeanscoretotal1,\n" +
+                        "  (SELECT stddev_samp(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) registeredinsiderstddevscoretotal1,\n" +
+                        "\n" +
+                        "  array_agg(id) registeredregistrationids,\n" +
+                        "  array_agg(score_total1) registeredscoretotal1s,\n" +
+                        "  array(SELECT rank_total1 FROM ranks_lk WHERE rank_option_id=option_id) registeredforeignerscoretotal1s,\n" +
+                        "  array(SELECT rank_total1 FROM ranks_lw WHERE rank_option_id=option_id) registeredforeignerdetailscoretotal1s,\n" +
+                        "  array(SELECT rank_total1 FROM ranks_dw WHERE rank_option_id=option_id) registeredinsiderscoretotal1s\n" +
+                        "FROM " + schemaName + "." + applicantTable +"\n" +
+                        "  JOIN ranks ON rank_id = id\n" +
+                        "GROUP BY option_id\n" +
+                        "ORDER BY option_id";
+
         final String sql = "UPDATE " + schemaName + "." + summaryTable + " up\n" +
                 "SET\n" +
                 "    registeredcount=tmp.registeredcount,\n" +
@@ -514,7 +603,10 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "    registeredinsiderhighscoretotal1 = tmp.registeredinsidermeanscoretotal1 + tmp.registeredstddevscoretotal1,\n" +
                 "\n" +
                 "    registeredregistrationids=tmp.registeredregistrationids,\n" +
-                "    registeredscoretotal1s=tmp.registeredscoretotal1s\n" +
+                "    registeredscoretotal1s=tmp.registeredscoretotal1s,\n" +
+                "    registeredforeignerscoretotal1s=tmp.registeredforeignerscoretotal1s,\n" +
+                "    registeredforeignerdetailscoretotal1s=tmp.registeredforeignerdetailscoretotal1s,\n" +
+                "    registeredinsiderscoretotal1s=tmp.registeredinsiderscoretotal1s\n" +
                 "FROM (\n" +
                 subSql + "\n" +
                 ") tmp\n" +
@@ -523,7 +615,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 schemaName, applicantTable, snapshotTime);
         jdbcTemplate.update(sql, ImmutableMap.of("snapshotTime", snapshotTime.toString()));
     }
-    
+
     /**
      * Step 4: You grab data for the filtered applicant. To be used for UPDATE FROM later.
      * MUST be executed inside Transaction
@@ -533,16 +625,28 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                                          NamedParameterJdbcTemplate jdbcTemplate,
                                          TransactionStatus tx,
                                          DateTime snapshotTime) {
-        
-        final String subSql = "WITH ranks AS (\n" +
-                "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
-                "\t  is_foreigner rank_is_foreigner,\n" +
-                "\t  (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) rank_is_foreigner_detail,\n" +
-                "\t  is_insentif rank_is_insentif,\n" +
-                "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
-                "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
-                "\tFROM " + schemaName + "." + filteredApplicantTable +"\n" +
-                ")\n" +
+        final String subSql =
+                "WITH ranks AS (\n" +
+                        "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
+                        "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
+                        "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
+                        "\tFROM " + schemaName + "." + filteredApplicantTable +"\n" +
+                        "), ranks_lk AS (\n" +
+                        "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
+                        "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
+                        "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
+                        "\tFROM " + schemaName + "." + filteredApplicantTable +" WHERE is_foreigner = true\n" +
+                        "), ranks_lw AS (\n" +
+                        "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
+                        "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
+                        "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
+                        "\tFROM " + schemaName + "." + filteredApplicantTable +" WHERE is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new)\n" +
+                        "), ranks_dw AS (\n" +
+                        "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
+                        "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
+                        "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
+                        "\tFROM " + schemaName + "." + filteredApplicantTable +" WHERE is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new)\n" +
+                        ")\n" +
                 "SELECT :snapshotTime::timestamp with time zone snapshottime, option_id,\n" +
                 "  COUNT(*) filteredcount,\n" +
                 "  SUM(CASE WHEN is_foreigner=true THEN 1 ELSE 0 END) filteredforeignercount,\n" +
@@ -551,43 +655,46 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "  SUM(CASE WHEN is_insentif=true THEN 1 ELSE 0 END) filteredinsentifcount,\n" +
                 "  \n" +
                 "  MIN(score_total1) filteredminscoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=1) filteredq1scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=2) filteredq2scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=3) filteredq3scoretotal1,\n" +
-                "  MAX(score_total1) filteredmaxscoretotal1,\n" +
-                "  AVG(score_total1) filteredmeanscoretotal1,\n" +
-                "  stddev_samp(score_total1) filteredstddevscoretotal1,\n" +
-                "  \n" +
-                "  (SELECT MIN(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) filteredforeignerminscoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true AND ranks.qtile=1) filteredforeignerq1scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true AND ranks.qtile=2) filteredforeignerq2scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true AND ranks.qtile=3) filteredforeignerq3scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) filteredforeignermaxscoretotal1,\n" +
-                "  (SELECT AVG(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) filteredforeignermeanscoretotal1,\n" +
-                "  (SELECT stddev_samp(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=true) filteredforeignerstddevscoretotal1,\n" +
-                "  \n" +
-                "  (SELECT MIN(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) filteredforeignerdetailminscoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true AND ranks.qtile=1) filteredforeignerdetailq1scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true AND ranks.qtile=2) filteredforeignerdetailq2scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true AND ranks.qtile=3) filteredforeignerdetailq3scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) filteredforeignerdetailmaxscoretotal1,\n" +
-                "  (SELECT AVG(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) filteredforeignerdetailmeanscoretotal1,\n" +
-                "  (SELECT stddev_samp(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner=false AND rank_is_foreigner_detail=true) filteredforeignerdetailstddevscoretotal1,\n" +
-                "  \n" +
-                "  (SELECT MIN(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) filteredinsiderminscoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false AND ranks.qtile=1) filteredinsiderq1scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false AND ranks.qtile=2) filteredinsiderq2scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false AND ranks.qtile=3) filteredinsiderq3scoretotal1,\n" +
-                "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) filteredinsidermaxscoretotal1,\n" +
-                "  (SELECT AVG(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) filteredinsidermeanscoretotal1,\n" +
-                "  (SELECT stddev_samp(rank_total1) FROM ranks WHERE rank_option_id=option_id AND rank_is_foreigner_detail=false) filteredinsiderstddevscoretotal1,\n" +
-                "  \n" +
-                "  array_agg(id) filteredregistrationids,\n" +
-                "  array_agg(score_total1) filteredscoretotal1s\n" +
-                "FROM "+ schemaName + "."+ filteredApplicantTable + "\n" +
-                "  JOIN ranks ON rank_id = id\n" +
-                "GROUP BY option_id\n" +
-                "ORDER BY option_id";
+                        "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=1) filteredq1scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=2) filteredq2scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND qtile=3) filteredq3scoretotal1,\n" +
+                        "  MAX(score_total1) filteredmaxscoretotal1,\n" +
+                        "  AVG(score_total1) filteredmeanscoretotal1,\n" +
+                        "  stddev_samp(score_total1) filteredstddevscoretotal1,\n" +
+                        "\n" +
+                        "  (SELECT MIN(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) filteredforeignerminscoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=1) filteredforeignerq1scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=2) filteredforeignerq2scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id AND qtile=3) filteredforeignerq3scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) filteredforeignermaxscoretotal1,\n" +
+                        "  (SELECT AVG(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) filteredforeignermeanscoretotal1,\n" +
+                        "  (SELECT stddev_samp(rank_total1) FROM ranks_lk WHERE rank_option_id=option_id) filteredforeignerstddevscoretotal1,\n" +
+                        "\n" +
+                        "  (SELECT MIN(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) filteredforeignerdetailminscoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=1) filteredforeignerdetailq1scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=2) filteredforeignerdetailq2scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id AND qtile=3) filteredforeignerdetailq3scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) filteredforeignerdetailmaxscoretotal1,\n" +
+                        "  (SELECT AVG(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) filteredforeignerdetailmeanscoretotal1,\n" +
+                        "  (SELECT stddev_samp(rank_total1) FROM ranks_lw WHERE rank_option_id=option_id) filteredforeignerdetailstddevscoretotal1,\n" +
+                        "\n" +
+                        "  (SELECT MIN(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) filteredinsiderminscoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=1) filteredinsiderq1scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=2) filteredinsiderq2scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id AND qtile=3) filteredinsiderq3scoretotal1,\n" +
+                        "  (SELECT MAX(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) filteredinsidermaxscoretotal1,\n" +
+                        "  (SELECT AVG(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) filteredinsidermeanscoretotal1,\n" +
+                        "  (SELECT stddev_samp(rank_total1) FROM ranks_dw WHERE rank_option_id=option_id) filteredinsiderstddevscoretotal1,\n" +
+                        "\n" +
+                        "  array_agg(id) filteredregistrationids,\n" +
+                        "  array_agg(score_total1) filteredscoretotal1s,\n" +
+                        "  array(SELECT rank_total1 FROM ranks_lk WHERE rank_option_id=option_id) filteredforeignerscoretotal1s,\n" +
+                        "  array(SELECT rank_total1 FROM ranks_lw WHERE rank_option_id=option_id) filteredforeignerdetailscoretotal1s,\n" +
+                        "  array(SELECT rank_total1 FROM ranks_dw WHERE rank_option_id=option_id) filteredinsiderscoretotal1s\n" +
+                        "FROM " + schemaName + "." + filteredApplicantTable +"\n" +
+                        "  JOIN ranks ON rank_id = id\n" +
+                        "GROUP BY option_id\n" +
+                        "ORDER BY option_id";
         
         final String sql = "UPDATE " + schemaName + "." + summaryTable + " up\n" +
                 "SET\n" +
@@ -638,7 +745,10 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "    filteredinsiderhighscoretotal1 = tmp.filteredinsidermeanscoretotal1 + tmp.filteredstddevscoretotal1,\n" +
                 "\n" +
                 "    filteredregistrationids=tmp.filteredregistrationids,\n" +
-                "    filteredscoretotal1s=tmp.filteredscoretotal1s\n" +
+                "    filteredscoretotal1s=tmp.filteredscoretotal1s,\n" +
+                "    filteredforeignerscoretotal1s=tmp.filteredforeignerscoretotal1s,\n" +
+                "    filteredforeignerdetailscoretotal1s=tmp.filteredforeignerdetailscoretotal1s,\n" +
+                "    filteredinsiderscoretotal1s=tmp.filteredinsiderscoretotal1s\n" +
                 "FROM (\n" +
                 subSql + "\n" +
                 ") tmp\n" +

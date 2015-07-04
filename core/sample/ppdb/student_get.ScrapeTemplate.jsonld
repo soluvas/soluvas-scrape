@@ -62,19 +62,23 @@
         },
         {
           "id": "is_foreigner",
-          "kind": "BOOLEAN"
+          "kind": "BOOLEAN",
+          "indexed": true
         },
         {
           "id": "is_foreigner_detail",
-          "kind": "INTEGER"
+          "kind": "INTEGER",
+          "indexed": true
         },
         {
           "id": "is_foreigner_new",
-          "kind": "INTEGER"
+          "kind": "INTEGER",
+          "indexed": true
         },
         {
           "id": "is_insentif",
-          "kind": "BOOLEAN"
+          "kind": "BOOLEAN",
+          "indexed": true
         },
         {
           "id": "name",
