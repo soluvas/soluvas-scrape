@@ -83,8 +83,8 @@ public class Fetcher {
         final Retryer<JsonRpc2MethodResult> retryer = RetryerBuilder.<JsonRpc2MethodResult>newBuilder()
                 .retryIfExceptionOfType(HttpStatusNotOkException.class)
                 .retryIfExceptionOfType(SocketException.class)
-                .withStopStrategy(StopStrategies.stopAfterAttempt(3))
-                .withWaitStrategy(WaitStrategies.fixedWait(15, TimeUnit.SECONDS))
+                .withStopStrategy(StopStrategies.stopAfterAttempt(10))
+                .withWaitStrategy(WaitStrategies.fixedWait(30, TimeUnit.SECONDS))
                 .build();
 
         fetchData.setJsonRpcResult(retryer.call(() -> {
