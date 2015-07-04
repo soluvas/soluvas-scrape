@@ -195,6 +195,7 @@ public class MultiUpsertTest {
             log.info("{} missing out of {} registration IDs ({} existing students): {}",
                     missingRegistrationIds.size(), registrationIds.size(), existingStudentRegistrationIds.size(),
                     missingRegistrationIds);
+//            Set<String> missingRegistrationIds = registrationIds;
 
             for (final String registrationId : missingRegistrationIds) {
                 try {

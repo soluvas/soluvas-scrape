@@ -113,7 +113,7 @@ public class UpsertTest {
     @Test
     public void upsertFiltered() throws IOException, PropertyVetoException {
         final FetchData result = fetcher.fetch(filteredSelect,
-                ImmutableMap.of("choice_id", 615));
+                ImmutableMap.of("choice_id", 685));
         final ScrapeData scrapeData = scraper.scrape(filteredSelect, result);
 
         final ComboPooledDataSource dataSource = new ComboPooledDataSource();

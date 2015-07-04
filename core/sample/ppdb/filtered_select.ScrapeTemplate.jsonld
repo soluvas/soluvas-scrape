@@ -65,7 +65,11 @@
         },
         {
           "id": "is_foreigner_detail",
-          "kind": "BOOLEAN"
+          "kind": "INTEGER"
+        },
+        {
+          "id": "is_foreigner_new",
+          "kind": "INTEGER"
         },
         {
           "id": "is_insentif",

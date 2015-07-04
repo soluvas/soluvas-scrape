@@ -176,7 +176,7 @@ ORDER BY option_id;
 WITH ranks AS (
 	SELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,
 	  is_foreigner rank_is_foreigner,
-	  is_foreigner_detail rank_is_foreigner_detail,
+	  (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) rank_is_foreigner_detail,
 	  is_insentif rank_is_insentif,
 	  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,
 	  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile
@@ -185,8 +185,8 @@ WITH ranks AS (
 SELECT option_id, '2015-07-02T04:00+07:00'::timestamp with time zone snapshottime,
   COUNT(*) registeredcount,
   SUM(CASE WHEN is_foreigner=true THEN 1 ELSE 0 END) registeredforeignercount,
-  SUM(CASE WHEN is_foreigner=false AND is_foreigner_detail=true THEN 1 ELSE 0 END) registeredforeignerdetailcount,
-  SUM(CASE WHEN is_foreigner=false AND is_foreigner_detail=false THEN 1 ELSE 0 END) registeredinsidercount,
+  SUM(CASE WHEN is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) THEN 1 ELSE 0 END) registeredforeignerdetailcount,
+  SUM(CASE WHEN is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new) THEN 1 ELSE 0 END) registeredinsidercount,
   SUM(CASE WHEN is_insentif=true THEN 1 ELSE 0 END) registeredinsentifcount,
   MIN(score_total1) registeredminscoretotal1,
   (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=1) registeredq1scoretotal1,
@@ -263,7 +263,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
 WITH ranks AS (
 	SELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,
 	  is_foreigner rank_is_foreigner,
-	  is_foreigner_detail rank_is_foreigner_detail,
+	  (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) rank_is_foreigner_detail,
 	  is_insentif rank_is_insentif,
 	  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,
 	  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile
@@ -272,8 +272,8 @@ WITH ranks AS (
 SELECT '2015-07-02T04:00+07:00'::timestamp with time zone snapshottime, option_id,
   COUNT(*) filteredcount,
   SUM(CASE WHEN is_foreigner=true THEN 1 ELSE 0 END) filteredforeignercount,
-  SUM(CASE WHEN is_foreigner=false AND is_foreigner_detail=true THEN 1 ELSE 0 END) filteredforeignerdetailcount,
-  SUM(CASE WHEN is_foreigner=false AND is_foreigner_detail=false THEN 1 ELSE 0 END) filteredinsidercount,
+  SUM(CASE WHEN is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) THEN 1 ELSE 0 END) filteredforeignerdetailcount,
+  SUM(CASE WHEN is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new) THEN 1 ELSE 0 END) filteredinsidercount,
   SUM(CASE WHEN is_insentif=true THEN 1 ELSE 0 END) filteredinsentifcount,
   MIN(score_total1) filteredminscoretotal1,
   (SELECT MAX(rank_total1) FROM ranks WHERE rank_option_id=option_id AND ranks.qtile=1) filteredq1scoretotal1,
@@ -413,7 +413,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
         final String subSql = "WITH ranks AS (\n" +
                 "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
                 "\t  is_foreigner rank_is_foreigner,\n" +
-                "\t  is_foreigner_detail rank_is_foreigner_detail,\n" +
+                "\t  (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) rank_is_foreigner_detail,\n" +
                 "\t  is_insentif rank_is_insentif,\n" +
                 "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
                 "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
@@ -422,8 +422,8 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "SELECT :snapshotTime::timestamp with time zone snapshottime, option_id,\n" +
                 "  COUNT(*) registeredcount,\n" +
                 "  SUM(CASE WHEN is_foreigner=true THEN 1 ELSE 0 END) registeredforeignercount,\n" +
-                "  SUM(CASE WHEN is_foreigner=false AND is_foreigner_detail=true THEN 1 ELSE 0 END) registeredforeignerdetailcount,\n" +
-                "  SUM(CASE WHEN is_foreigner=false AND is_foreigner_detail=false THEN 1 ELSE 0 END) registeredinsidercount,\n" +
+                "  SUM(CASE WHEN is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) THEN 1 ELSE 0 END) registeredforeignerdetailcount,\n" +
+                "  SUM(CASE WHEN is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new) THEN 1 ELSE 0 END) registeredinsidercount,\n" +
                 "  SUM(CASE WHEN is_insentif=true THEN 1 ELSE 0 END) registeredinsentifcount,\n" +
                 "  \n" +
                 "  MIN(score_total1) registeredminscoretotal1,\n" +
@@ -537,7 +537,7 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
         final String subSql = "WITH ranks AS (\n" +
                 "\tSELECT id rank_id, option_id rank_option_id, score_total1 rank_total1,\n" +
                 "\t  is_foreigner rank_is_foreigner,\n" +
-                "\t  is_foreigner_detail rank_is_foreigner_detail,\n" +
+                "\t  (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) rank_is_foreigner_detail,\n" +
                 "\t  is_insentif rank_is_insentif,\n" +
                 "\t  percent_rank() OVER (PARTITION BY option_id ORDER BY score_total1) AS percentrank,\n" +
                 "\t  ntile(4) OVER (PARTITION BY option_id ORDER BY score_total1) AS qtile\n" +
@@ -546,8 +546,8 @@ WHERE up.option_id=tmp.option_id AND up.snapshottime=tmp.snapshottime;
                 "SELECT :snapshotTime::timestamp with time zone snapshottime, option_id,\n" +
                 "  COUNT(*) filteredcount,\n" +
                 "  SUM(CASE WHEN is_foreigner=true THEN 1 ELSE 0 END) filteredforeignercount,\n" +
-                "  SUM(CASE WHEN is_foreigner=false AND is_foreigner_detail=true THEN 1 ELSE 0 END) filteredforeignerdetailcount,\n" +
-                "  SUM(CASE WHEN is_foreigner=false AND is_foreigner_detail=false THEN 1 ELSE 0 END) filteredinsidercount,\n" +
+                "  SUM(CASE WHEN is_foreigner=false AND (is_insentif=false OR is_foreigner_detail<>is_foreigner_new) THEN 1 ELSE 0 END) filteredforeignerdetailcount,\n" +
+                "  SUM(CASE WHEN is_foreigner=false AND (is_insentif=true AND is_foreigner_detail=is_foreigner_new) THEN 1 ELSE 0 END) filteredinsidercount,\n" +
                 "  SUM(CASE WHEN is_insentif=true THEN 1 ELSE 0 END) filteredinsentifcount,\n" +
                 "  \n" +
                 "  MIN(score_total1) filteredminscoretotal1,\n" +
