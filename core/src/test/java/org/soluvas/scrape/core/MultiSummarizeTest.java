@@ -1,7 +1,10 @@
 package org.soluvas.scrape.core;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -28,6 +31,7 @@ import java.beans.PropertyVetoException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -109,7 +113,16 @@ public class MultiSummarizeTest {
             final Set<Integer> aggregateOptionIds = nestedOptionIds.stream().flatMap(Set::stream).collect(Collectors.toSet());
             log.info("{} aggregate option IDs: {}", aggregateOptionIds.size(), aggregateOptionIds);
 
+            final Set<String> alltimeRegistrationIds = new TransactionTemplate(txMgr).execute(tx -> {
+                final Set<String> tmpRegistrationIds = ImmutableSet.copyOf(jdbcTemplate.queryForList(
+                        "SELECT id FROM ppdbbandung2015.applicant ORDER BY id",
+                        ImmutableMap.of(), String.class));
+                log.info("{} Previous Applicant Registration IDs: {}", tmpRegistrationIds.size(), tmpRegistrationIds);
+                return tmpRegistrationIds;
+            });
+
             // REGISTERED
+            final LinkedHashSet<String> newRegistrationIds = new LinkedHashSet<>();
             for (Integer optionId : aggregateOptionIds) {
                 final FetchData result = fetcher.fetch(registeredSelect,
                         ImmutableMap.of("choice_id", optionId));
@@ -117,6 +130,11 @@ public class MultiSummarizeTest {
 
                 tableDmlGenerator.upsert("ppdbbandung2015", registeredSelect,
                         scrapeData, dataSource, txMgr);
+
+                final CollectionData applicantColl = scrapeData.getCollections().stream()
+                        .filter(it -> "applicant".equals(it.getDefinition().getId())).findAny().get();
+                applicantColl.getEntities()
+                        .forEach(it -> newRegistrationIds.add(it.getId()));
             }
             // FILTERED
             // FIXME: Workaround because we don't know how to remove old stuff yet
@@ -131,6 +149,14 @@ public class MultiSummarizeTest {
 
             summarizer.summarize("ppdbbandung2015", "optionapplicantsnapshot", dataSource,
                     txMgr, new DateTime());
+
+            final Sets.SetView<String> revokedRegistrationIds = Sets.difference(alltimeRegistrationIds, newRegistrationIds);
+            log.info("All-time regIDs: {}. Current regIDs: {}. {} missing: {}",
+                    alltimeRegistrationIds.size(), newRegistrationIds.size(),
+                    revokedRegistrationIds.size(), revokedRegistrationIds);
+            final String revokedSql = "SELECT * FROM ppdbbandung2015.student WHERE registration_id IN " +
+                    Joiner.on(", ").join(revokedRegistrationIds.stream().map(it -> "'" + it + "'").toArray());
+            log.info("{} missing regIDs: {}", revokedRegistrationIds.size(), revokedSql);
         } finally {
             dataSource.close();
         }

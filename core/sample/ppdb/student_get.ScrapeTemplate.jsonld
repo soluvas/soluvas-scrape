@@ -46,7 +46,8 @@
         },
         {
           "id": "registration_id",
-          "kind": "STRING"
+          "kind": "STRING",
+          "indexed": true
         },
         {
           "id": "no_un",
