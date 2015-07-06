@@ -78,10 +78,10 @@ public class UpsertTest {
 
         final ComboPooledDataSource dataSource = new ComboPooledDataSource();
         try {
-            dataSource.setDriverClass(Driver.class.getName());
-            dataSource.setJdbcUrl("jdbc:postgresql://localhost/scrape_scrape_dev");
-            dataSource.setUser("postgres");
-            dataSource.setPassword("bippo");
+            dataSource.setDriverClass(env.getRequiredProperty("spring.datasource.driverClassName"));
+            dataSource.setJdbcUrl(env.getRequiredProperty("spring.datasource.url"));
+            dataSource.setUser(env.getRequiredProperty("spring.datasource.username"));
+            dataSource.setPassword(env.getRequiredProperty("spring.datasource.password"));
 
             final DataSourceTransactionManager txMgr = new DataSourceTransactionManager(dataSource);
             txMgr.afterPropertiesSet();
@@ -102,10 +102,10 @@ public class UpsertTest {
 
         final ComboPooledDataSource dataSource = new ComboPooledDataSource();
         try {
-            dataSource.setDriverClass(Driver.class.getName());
-            dataSource.setJdbcUrl("jdbc:postgresql://localhost/scrape_scrape_dev");
-            dataSource.setUser("postgres");
-            dataSource.setPassword("bippo");
+            dataSource.setDriverClass(env.getRequiredProperty("spring.datasource.driverClassName"));
+            dataSource.setJdbcUrl(env.getRequiredProperty("spring.datasource.url"));
+            dataSource.setUser(env.getRequiredProperty("spring.datasource.username"));
+            dataSource.setPassword(env.getRequiredProperty("spring.datasource.password"));
 
             final DataSourceTransactionManager txMgr = new DataSourceTransactionManager(dataSource);
             txMgr.afterPropertiesSet();
@@ -143,10 +143,10 @@ public class UpsertTest {
 
         final ComboPooledDataSource dataSource = new ComboPooledDataSource();
         try {
-            dataSource.setDriverClass(Driver.class.getName());
-            dataSource.setJdbcUrl("jdbc:postgresql://localhost/scrape_scrape_dev");
-            dataSource.setUser("postgres");
-            dataSource.setPassword("bippo");
+            dataSource.setDriverClass(env.getRequiredProperty("spring.datasource.driverClassName"));
+            dataSource.setJdbcUrl(env.getRequiredProperty("spring.datasource.url"));
+            dataSource.setUser(env.getRequiredProperty("spring.datasource.username"));
+            dataSource.setPassword(env.getRequiredProperty("spring.datasource.password"));
 
             final DataSourceTransactionManager txMgr = new DataSourceTransactionManager(dataSource);
             txMgr.afterPropertiesSet();
@@ -166,10 +166,10 @@ public class UpsertTest {
 
         final ComboPooledDataSource dataSource = new ComboPooledDataSource();
         try {
-            dataSource.setDriverClass(Driver.class.getName());
-            dataSource.setJdbcUrl("jdbc:postgresql://localhost/scrape_scrape_dev");
-            dataSource.setUser("postgres");
-            dataSource.setPassword("bippo");
+            dataSource.setDriverClass(env.getRequiredProperty("spring.datasource.driverClassName"));
+            dataSource.setJdbcUrl(env.getRequiredProperty("spring.datasource.url"));
+            dataSource.setUser(env.getRequiredProperty("spring.datasource.username"));
+            dataSource.setPassword(env.getRequiredProperty("spring.datasource.password"));
 
             final DataSourceTransactionManager txMgr = new DataSourceTransactionManager(dataSource);
             txMgr.afterPropertiesSet();
