@@ -10,4 +10,5 @@
     <logger name="org.springframework.security" level="INFO"/>
     <logger name="org.scribe" level="DEBUG"/>
     <!--<logger name="org.apache.http.impl" level="DEBUG"/>-->
+    <!--<logger name="org.apache.http.headers" level="DEBUG"/>-->
 </configuration>

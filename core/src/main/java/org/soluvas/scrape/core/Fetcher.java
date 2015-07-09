@@ -91,8 +91,9 @@ public class Fetcher {
             log.info("Trying fetch {} {} {} {} {} ...",
                     template.getProtocol(), template.getProtocolVersion(), uri, template.getRpcMethod(), actualParams);
             try (CloseableHttpResponse resp = httpClient.execute(postReq, context)) {
-                log.info("Received {} {} {} bytes", context.getCacheResponseStatus(),
-                        resp.getEntity().getContentType(), resp.getEntity().getContentLength());
+                log.info("Received {} {} {} bytes {}", context.getCacheResponseStatus(),
+                        resp.getEntity().getContentType(), resp.getEntity().getContentLength(),
+                        resp.getFirstHeader("Content-Encoding"));
                 final String entityBody = IOUtils.toString(resp.getEntity().getContent(), StandardCharsets.UTF_8);
                 if (resp.getStatusLine().getStatusCode() < 200 || resp.getStatusLine().getStatusCode() >= 300) {
                     log.warn("{} {} {} {} {} HTTP Error {} {}: {}",

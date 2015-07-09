@@ -17,6 +17,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -61,12 +62,13 @@ public class MultiScrapeThenSummarize implements CommandLineRunner {
         final SpringApplicationBuilder builder = new SpringApplicationBuilder()
                 .sources(MultiScrapeThenSummarize.Config.class);
         builder.application().setWebEnvironment(false);
-        builder.profiles("sql", "scraper", "summarizer");
+        builder.profiles("sql", "scraper", "summarizer", "multiscrapethensummarize");
         builder.run(args);
     }
 
     @ComponentScan(basePackageClasses = Fetcher.class)
     @Configuration
+    @Profile("multiscrapethensummarize")
     public static class Config {
         @Bean
         public MultiScrapeThenSummarize multiScrapeThenSummarize() {

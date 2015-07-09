@@ -2,6 +2,7 @@ package org.soluvas.scrape.core;
 
 import net.sf.ehcache.CacheManager;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DecompressingHttpClient;
 import org.apache.http.impl.client.cache.CacheConfig;
 import org.apache.http.impl.client.cache.CachingHttpClients;
 import org.apache.http.impl.client.cache.ManagedHttpCacheStorage;
