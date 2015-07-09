@@ -107,7 +107,7 @@ public class Fetcher {
                 }
                 try {
                     final JsonRpc2MethodResult methodResult = JsonUtils.mapper.readValue(entityBody, JsonRpc2MethodResult.class);
-                    log.info("JSON-RPC Method result: {}", methodResult);
+                    log.trace("JSON-RPC Method result: {}", methodResult);
                     if (methodResult.getError() != null) {
                         throw new ScrapeException(methodResult.getError(), "Error fetching %s: %s", uri, methodResult.getError());
                     }
